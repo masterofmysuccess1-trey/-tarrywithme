@@ -28,23 +28,34 @@
 <li><p>How the cycle of porn and lust really starts</p></li>
 <li><p>The lies that keep you trapped, including the one that tells you you'll never be free</p></li>
 <li><p>Why your beginning does not have to be your ending</p></li>
-</ul><p>Enter your email and the chapter goes straight to your inbox.</p><p class="price big">Free email delivery</p><form class="signup" method="post" action="" data-tag="free-chapter"><input type="email" name="email" placeholder="Your email address" aria-label="Email address" required><button class="btn" type="submit">Get now</button></form><p class="form-note">Sign-up will be connected to the new email service before launch.</p></div></div></div></section><section class="sec narrow" style="--bg:#FFFFFF;--head:#0D2A2A;--text:#0D2A2A;--btn:#1f3989;--btn-text:#FFFFFF;--card:#E3EBEB;--card-text:#0D2A2A;--card-head:#0D2A2A;--sub:#3E5D5D"><div class="wrap"><div class="sec-head left"><h2>What you get</h2></div><ul class="toc"><li><span>Overcoming Sexual Sin Free Chapter 1.pdf</span><span class="muted">12.8 KB</span></li></ul></div></section>
+</ul><p>Enter your email and the chapter goes straight to your inbox.</p><p class="price big">Free email delivery</p><form class="signup" method="post" action="/api/subscribe" data-tag="free-chapter"><input type="hidden" name="tag" value="free-chapter"><input type="text" name="website" tabindex="-1" autocomplete="off" aria-hidden="true" class="hp"><input type="email" name="email" placeholder="Your email address" aria-label="Email address" required><button class="btn" type="submit">Get now</button></form></div></div></div></section><section class="sec narrow" style="--bg:#FFFFFF;--head:#0D2A2A;--text:#0D2A2A;--btn:#1f3989;--btn-text:#FFFFFF;--card:#E3EBEB;--card-text:#0D2A2A;--card-head:#0D2A2A;--sub:#3E5D5D"><div class="wrap"><div class="sec-head left"><h2>What you get</h2></div><ul class="toc"><li><span>Overcoming Sexual Sin Free Chapter 1.pdf</span><span class="muted">12.8 KB</span></li></ul></div></section>
 </main>
 <footer class="foot">
   <div class="wrap foot-grid">
     <div><p class="brand">The Restoration Movement</p><p><strong>© Trey Walters. All rights reserved.</strong><br>Author • Mentor • Speaker helping individuals rebuild, heal, and thrive after life’s toughest seasons.</p></div>
     <nav><a href="./">Home</a><a href="./#books">Books</a><a href="my-book">My Book</a><a href="services">Services</a><a href="blog">Blog</a><a href="contact">Contact</a></nav>
-    <div><p class="foot-h">Join my email list</p><form class="signup" method="post" action="" data-tag="footer"><input type="email" name="email" placeholder="Your email address" aria-label="Email address" required><button class="btn" type="submit">Subscribe</button></form><p class="form-note">Sign-up will be connected to the new email service before launch.</p></div>
+    <div><p class="foot-h">Join my email list</p><form class="signup" method="post" action="/api/subscribe" data-tag="footer"><input type="hidden" name="tag" value="footer"><input type="text" name="website" tabindex="-1" autocomplete="off" aria-hidden="true" class="hp"><input type="email" name="email" placeholder="Your email address" aria-label="Email address" required><button class="btn" type="submit">Subscribe</button></form></div>
   </div>
 </footer>
 <script>
 document.querySelectorAll("form.signup").forEach(function (f) {
-  if (f.getAttribute("action")) return;
+  var action = f.getAttribute("action");
+  function say(text) {
+    var n = f.nextElementSibling && f.nextElementSibling.classList.contains("form-note") ? f.nextElementSibling : f.parentNode.insertBefore(document.createElement("p"), f.nextSibling);
+    n.className = "form-note shown";
+    n.setAttribute("role", "status");
+    n.textContent = text;
+  }
   f.addEventListener("submit", function (ev) {
     ev.preventDefault();
-    var n = f.nextElementSibling && f.nextElementSibling.classList.contains("form-note") ? f.nextElementSibling : f.parentNode.appendChild(document.createElement("p"));
-    n.className = "form-note shown";
-    n.textContent = "Sign-up is not connected yet. It will be linked to the new email service before launch.";
+    if (!action) { say("Sign-up is not connected yet. It will be linked to the new email service before launch."); return; }
+    var btn = f.querySelector("button");
+    btn.disabled = true;
+    fetch(action, { method: "POST", body: new FormData(f), headers: { Accept: "application/json" } })
+      .then(function (r) { return r.json(); })
+      .then(function (d) { say(d.message); if (d.ok) f.reset(); })
+      .catch(function () { say("Something went wrong. Please check your connection and try again."); })
+      .then(function () { btn.disabled = false; });
   });
 });
 </script>

@@ -284,8 +284,12 @@ def r_testimonials(p, first=False):
 
 def signup_form(btn="Subscribe", tag="newsletter"):
     action = checkout.get("_email_form_action") or ""
+    if PREVIEW:
+        action = ""  # previews are plain files with nothing behind them to receive a sign-up
     note = "" if action else '<p class="form-note">Sign-up will be connected to the new email service before launch.</p>'
     return (f'<form class="signup" method="post" action="{e(action)}" data-tag="{e(tag)}">'
+            f'<input type="hidden" name="tag" value="{e(tag)}">'
+            f'<input type="text" name="website" tabindex="-1" autocomplete="off" aria-hidden="true" class="hp">'
             f'<input type="email" name="email" placeholder="Your email address" aria-label="Email address" required>'
             f'<button class="btn" type="submit">{e(btn)}</button></form>{note}')
 
@@ -361,12 +365,23 @@ RENDER = {"Image": r_image, "Text": r_text, "CallToAction": r_cta, "Products": r
 
 FORM_JS = """<script>
 document.querySelectorAll("form.signup").forEach(function (f) {
-  if (f.getAttribute("action")) return;
+  var action = f.getAttribute("action");
+  function say(text) {
+    var n = f.nextElementSibling && f.nextElementSibling.classList.contains("form-note") ? f.nextElementSibling : f.parentNode.insertBefore(document.createElement("p"), f.nextSibling);
+    n.className = "form-note shown";
+    n.setAttribute("role", "status");
+    n.textContent = text;
+  }
   f.addEventListener("submit", function (ev) {
     ev.preventDefault();
-    var n = f.nextElementSibling && f.nextElementSibling.classList.contains("form-note") ? f.nextElementSibling : f.parentNode.appendChild(document.createElement("p"));
-    n.className = "form-note shown";
-    n.textContent = "Sign-up is not connected yet. It will be linked to the new email service before launch.";
+    if (!action) { say("Sign-up is not connected yet. It will be linked to the new email service before launch."); return; }
+    var btn = f.querySelector("button");
+    btn.disabled = true;
+    fetch(action, { method: "POST", body: new FormData(f), headers: { Accept: "application/json" } })
+      .then(function (r) { return r.json(); })
+      .then(function (d) { say(d.message); if (d.ok) f.reset(); })
+      .catch(function () { say("Something went wrong. Please check your connection and try again."); })
+      .then(function () { btn.disabled = false; });
   });
 });
 </script>"""
@@ -490,6 +505,11 @@ write("blog", shell("Blog | Trey Walters", "Teaching and encouragement from Trey
                     "blog"))
 
 redirects += ["/about /my-book 301", "/homepage / 301"]
+if not PREVIEW:
+    # The sign-up handler that runs on Cloudflare Pages beside the static files.
+    worker = open(os.path.join(ROOT, "worker.js")).read()
+    worker = worker.replace("__GROUPS__", json.dumps(checkout.get("_sender_groups") or {}, indent=2))
+    open(os.path.join(OUT, "_worker.js"), "w").write(worker)
 open(os.path.join(OUT, "_redirects"), "w").write("\n".join(redirects) + "\n")
 n = sum(len(f) for _, _, f in os.walk(OUT))
 size = sum(os.path.getsize(os.path.join(d, f)) for d, _, fs in os.walk(OUT) for f in fs)

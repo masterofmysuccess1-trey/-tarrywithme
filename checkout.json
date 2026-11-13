@@ -1,6 +1,14 @@
 {
   "_readme": "One entry per product page. kind 'pay' = a buy button that goes to 'url' (a Stripe Payment Link once set up; empty means it still points at the Podia checkout). kind 'email' = a free download delivered by email sign-up.",
-  "_email_form_action": "",
+  "_email_form_action": "/api/subscribe",
+  "_sender_groups_readme": "Which Sender group each sign-up box adds people to. 'newsletter' is added for every sign-up; the others are the free-download pages.",
+  "_sender_groups": {
+    "newsletter": "dJ2A0P",
+    "free-chapter": "aK2BJY",
+    "anger-is-costing-you-more-than-you-think-master-your-emotions-and-take-back-control-of-your-life": "dL2DKA",
+    "identifying-red-flags-in-dating": "aM2gL5",
+    "the-covenant-breaker-prayers-and-psalms-to-break-marine-covenants-and-get-free-from-porn-masturbation-and-sexual-dreams": "dN2jMp"
+  },
 
   "freedom-bundle": {"kind": "pay", "url": ""},
   "over-coming-sexual-sin": {"kind": "pay", "url": ""},
