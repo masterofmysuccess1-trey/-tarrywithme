@@ -49,7 +49,16 @@ document.querySelectorAll("form.signup").forEach(function (f) {
     btn.disabled = true;
     fetch(action, { method: "POST", body: new FormData(f), headers: { Accept: "application/json" } })
       .then(function (r) { return r.json(); })
-      .then(function (d) { say(d.message); if (d.ok) f.reset(); })
+      .then(function (d) {
+        say(d.message);
+        if (d.link) {
+          var a = document.createElement("a");
+          a.href = d.link; a.textContent = "Download it here";
+          f.nextElementSibling.appendChild(document.createTextNode(" "));
+          f.nextElementSibling.appendChild(a);
+        }
+        if (d.ok) f.reset();
+      })
       .catch(function () { say("Something went wrong. Please check your connection and try again."); })
       .then(function () { btn.disabled = false; });
   });

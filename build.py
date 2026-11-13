@@ -379,7 +379,16 @@ document.querySelectorAll("form.signup").forEach(function (f) {
     btn.disabled = true;
     fetch(action, { method: "POST", body: new FormData(f), headers: { Accept: "application/json" } })
       .then(function (r) { return r.json(); })
-      .then(function (d) { say(d.message); if (d.ok) f.reset(); })
+      .then(function (d) {
+        say(d.message);
+        if (d.link) {
+          var a = document.createElement("a");
+          a.href = d.link; a.textContent = "Download it here";
+          f.nextElementSibling.appendChild(document.createTextNode(" "));
+          f.nextElementSibling.appendChild(a);
+        }
+        if (d.ok) f.reset();
+      })
       .catch(function () { say("Something went wrong. Please check your connection and try again."); })
       .then(function () { btn.disabled = false; });
   });
@@ -509,6 +518,9 @@ if not PREVIEW:
     # The sign-up handler that runs on Cloudflare Pages beside the static files.
     worker = open(os.path.join(ROOT, "worker.js")).read()
     worker = worker.replace("__GROUPS__", json.dumps(checkout.get("_sender_groups") or {}, indent=2))
+    worker = worker.replace("__DOWNLOADS__", json.dumps(checkout.get("_downloads") or {}, indent=2))
+    if os.path.isdir(os.path.join(ROOT, "downloads")):
+        shutil.copytree(os.path.join(ROOT, "downloads"), os.path.join(OUT, "downloads"))
     open(os.path.join(OUT, "_worker.js"), "w").write(worker)
 open(os.path.join(OUT, "_redirects"), "w").write("\n".join(redirects) + "\n")
 n = sum(len(f) for _, _, f in os.walk(OUT))

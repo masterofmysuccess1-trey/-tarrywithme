@@ -4,6 +4,8 @@
 // Pages secret SENDER_API_TOKEN (Settings > Variables and Secrets).
 
 const GROUPS = __GROUPS__; // filled in by build.py from "_sender_groups" in checkout.json
+const DOWNLOADS = __DOWNLOADS__; // filled in by build.py from "_downloads" in checkout.json
+const FROM = { email: "trey@tarrywithme.com", name: "Trey Walters" };
 
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
@@ -22,10 +24,40 @@ function page(status, heading, text) {
   return new Response(html, { status, headers: { "content-type": "text/html; charset=utf-8", "cache-control": "no-store" } });
 }
 
+const esc = (t) => String(t).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+
+// Emails the download link for a free resource. Returns true when Sender accepted it.
+async function sendDownload(env, email, item, link) {
+  const title = esc(item.title);
+  const html = `<div style="font-family:Arial,Helvetica,sans-serif;font-size:16px;line-height:1.6;color:#0d2a2a;max-width:560px;margin:0 auto;padding:24px">
+<p>Hi,</p>
+<p>Thank you for asking for <strong>${title}</strong>. Your free copy is ready.</p>
+<p style="margin:28px 0"><a href="${link}" style="background:#1f3989;color:#ffffff;text-decoration:none;padding:14px 26px;border-radius:4px;font-weight:bold;display:inline-block">Download your copy</a></p>
+<p>If the button doesn't work, copy this link into your browser:<br><a href="${link}">${link}</a></p>
+<p>I pray it helps you. You'll also hear from me now and then with encouragement and new resources.</p>
+<p>Trey Walters<br>The Restoration Movement</p>
+</div>`;
+  const text = `Hi,\n\nThank you for asking for ${item.title}. Your free copy is ready:\n${link}\n\nI pray it helps you.\n\nTrey Walters\nThe Restoration Movement`;
+  const res = await fetch("https://api.sender.net/v2/message/send", {
+    method: "POST",
+    headers: {
+      authorization: `Bearer ${env.SENDER_API_TOKEN}`,
+      "content-type": "application/json",
+      accept: "application/json",
+    },
+    body: JSON.stringify({ from: FROM, to: { email }, subject: `Your free copy: ${item.title}`, html, text }),
+  });
+  if (!res.ok) console.log("sender send error", res.status, (await res.text()).slice(0, 300));
+  return res.ok;
+}
+
 async function subscribe(request, env) {
   const wantsJson = (request.headers.get("accept") || "").includes("application/json");
-  const reply = (status, ok, message) =>
-    wantsJson ? json(status, { ok, message }) : page(status, ok ? "You're in" : "That didn't work", message);
+  const reply = (status, ok, message, link) => {
+    if (wantsJson) return json(status, link ? { ok, message, link } : { ok, message });
+    const more = link ? ` <a href="${link}">Download it here</a>.` : "";
+    return page(status, ok ? "You're in" : "That didn't work", message + more);
+  };
 
   let data;
   try {
@@ -59,8 +91,19 @@ async function subscribe(request, env) {
     console.log("sender error", res.status, (await res.text()).slice(0, 300));
     return reply(502, false, "Something went wrong on our side. Please try again in a moment.");
   }
-  const free = tag !== "newsletter" && tag !== "footer" && GROUPS[tag];
-  return reply(200, true, free ? "Thank you. Your download is on its way to your inbox." : "Thank you. You're on the list.");
+  const item = DOWNLOADS[tag];
+  if (item) {
+    const link = `${new URL(request.url).origin}/downloads/${item.file}`;
+    if (await sendDownload(env, email, item, link)) {
+      return reply(200, true, "Thank you. Your download is on its way to your inbox.");
+    }
+    // The email could not be sent, so hand the file over directly instead of leaving them waiting.
+    return reply(200, true, "Thank you. Your download is ready.", link);
+  }
+  if (GROUPS[tag] && tag !== "newsletter") {
+    return reply(200, true, "Thank you. Your copy will be emailed to you soon.");
+  }
+  return reply(200, true, "Thank you. You're on the list.");
 }
 
 export default {
