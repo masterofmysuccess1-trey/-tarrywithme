@@ -15,6 +15,10 @@ const DOWNLOADS = {
     "title": "Overcoming Sexual Sin: Free Chapter 1",
     "file": "overcoming-sexual-sin-free-chapter-1.pdf"
   },
+  "identifying-red-flags-in-dating": {
+    "title": "Identifying Red Flags In Dating",
+    "file": "identifying-red-flags-in-dating.pdf"
+  },
   "the-covenant-breaker-prayers-and-psalms-to-break-marine-covenants-and-get-free-from-porn-masturbation-and-sexual-dreams": {
     "title": "The Covenant Breaker",
     "file": "the-covenant-breaker.pdf"
