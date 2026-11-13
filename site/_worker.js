@@ -15,6 +15,10 @@ const DOWNLOADS = {
     "title": "Overcoming Sexual Sin: Free Chapter 1",
     "file": "overcoming-sexual-sin-free-chapter-1.pdf"
   },
+  "anger-is-costing-you-more-than-you-think-master-your-emotions-and-take-back-control-of-your-life": {
+    "title": "Anger Is Costing You More Than You Think",
+    "file": "anger-is-costing-you-more-than-you-think.pdf"
+  },
   "identifying-red-flags-in-dating": {
     "title": "Identifying Red Flags In Dating",
     "file": "identifying-red-flags-in-dating.pdf"
