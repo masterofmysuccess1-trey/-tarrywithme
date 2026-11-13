@@ -1,0 +1,19 @@
+{
+  "_readme": "One entry per product page. kind 'pay' = a buy button that goes to 'url' (a Stripe Payment Link once set up; empty means it still points at the Podia checkout). kind 'email' = a free download delivered by email sign-up.",
+  "_email_form_action": "",
+
+  "freedom-bundle": {"kind": "pay", "url": ""},
+  "over-coming-sexual-sin": {"kind": "pay", "url": ""},
+  "water-spirits-the-hidden-force-behind-sexual-immorality": {"kind": "pay", "url": ""},
+  "the-impossible-prayer-life": {"kind": "pay", "url": ""},
+  "the-control-trap-how-to-recognize-and-escape-a-jezebel-spirit-at-home-work-church": {"kind": "pay", "url": ""},
+  "kingdom-income-how-i-went-from-homeless-to-building-wealth-god-s-way": {"kind": "pay", "url": ""},
+  "the-value-of-the-woman": {"kind": "pay", "url": ""},
+  "mentorship": {"kind": "pay", "url": ""},
+  "author-coaching": {"kind": "pay", "url": ""},
+
+  "free-chapter": {"kind": "email"},
+  "anger-is-costing-you-more-than-you-think-master-your-emotions-and-take-back-control-of-your-life": {"kind": "email"},
+  "identifying-red-flags-in-dating": {"kind": "email"},
+  "the-covenant-breaker-prayers-and-psalms-to-break-marine-covenants-and-get-free-from-porn-masturbation-and-sexual-dreams": {"kind": "email"}
+}
