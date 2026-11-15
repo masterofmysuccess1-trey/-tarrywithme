@@ -21,7 +21,47 @@ pages = json.load(open(os.path.join(SRC, "pages.json")))
 posts_meta = json.load(open(os.path.join(SRC, "posts.json")))
 checkout = json.load(open(os.path.join(ROOT, "checkout.json")))
 
-SITE_NAME = "The Restoration Movement"
+SITE_NAME = "Tarry With Me"
+TAGLINE = "Helping You Rise from the Valley"
+# Free-consultation booking link, set in checkout.json under "_booking_url". Left empty, the link is not shown.
+BOOKING_URL = checkout.get("_booking_url") or ""
+SOCIALS = [("Facebook", "https://web.facebook.com/trey.walters.2025"), ("Instagram", "https://www.instagram.com/masterofmysuccess"),
+           ("TikTok", "https://www.tiktok.com/@trey.walters")]
+# Product names as they read in Podia after the November 2026 clean-up.
+NAME_FIX = {
+    "OVERCOMING SEXUAL SIN": "Overcoming Sexual Sin",
+    "The impossible prayer life": "The Impossible Prayer Life",
+    "THE CONTROL TRAP: How To Recognize And Escape  A Jezebel Spirit At Home-Work-Church":
+        "The Control Trap: How To Recognize And Escape A Jezebel Spirit At Home, Work And Church",
+    "Anger Is Costing You More Than You Think MASTER YOUR EMOTIONS, AND TAKE BACK CONTROL OF YOUR LIFE":
+        "Anger Is Costing You More Than You Think: Master Your Emotions And Take Back Control Of Your Life",
+}
+# Swap an old-site picture (by cache key) for a better one already in the cache.
+IMG_SWAP = {
+    "a67c186f65be": "9fab99a0a0f3",  # "The Restoration Movement" banner on Services -> Trey at his book table
+}
+# Real photos for the coaching products, which only had the logo as their picture.
+PRODUCT_PHOTO = {
+    "author-coaching": "cache:2cdd10032106",  # Trey with an author holding her finished book
+    "mentorship": "cache:6519ca134280",       # Trey speaking
+}
+# Order of the books on the home page; the bundle leads because it is the best value.
+BOOK_ORDER = ["freedom-bundle", "over-coming-sexual-sin", "water-spirits-the-hidden-force-behind-sexual-immorality",
+              "the-impossible-prayer-life", "the-control-trap-how-to-recognize-and-escape-a-jezebel-spirit-at-home-work-church",
+              "the-value-of-the-woman", "kingdom-income-how-i-went-from-homeless-to-building-wealth-god-s-way"]
+FEATURED_ON = ["Sheena Power Talk", "The Dayelight Show", "Wise Worthy Woman (Best 100FM)",
+               "Geared To Live Talk Show", "The Prophets Marketplace Podcast"]
+
+
+PLACEHOLDERS = {"Text section", "You can add more detail in this subtitle", "Banner"}
+
+
+def fixname(n):
+    return NAME_FIX.get(n, n)
+
+
+def brandfix(s):
+    return re.sub(r"(?i)\bthe restoration movement\b", SITE_NAME, s or "")
 NAV = [("Books", "#books"), ("My Book", "my-book"), ("Services", "services"),
        ("Blog", "blog"), ("Contact", "contact")]
 # Podia's four sample posts are not Trey's writing; leave them behind.
@@ -83,15 +123,18 @@ def img(url, width=1200):
         return None
     if url.startswith("//"):
         url = "https:" + url
-    key = hashlib.sha1(url.encode()).hexdigest()[:12]
+    key = url[6:] if url.startswith("cache:") else hashlib.sha1(url.encode()).hexdigest()[:12]
+    key = IMG_SWAP.get(key, key)
     name = f"{key}-{width}.jpg"
     dest = os.path.join(OUT, "img", name)
     if (url, width) not in _img:
         raw = os.path.join(CACHE, key)
-        if not os.path.exists(raw):
+        if not os.path.exists(raw) and not url.startswith("cache:"):
             subprocess.run(["curl", "-sSL", "-m", "60", "-A", "Mozilla/5.0", "-o", raw, url], check=True)
         try:
             im = Image.open(raw)
+            if im.format == "SVG" or im.width < 2:
+                raise ValueError("not a photo")
             if im.mode in ("RGBA", "LA", "P"):
                 im = im.convert("RGBA")
                 bg = Image.new("RGB", im.size, (255, 255, 255))
@@ -124,6 +167,7 @@ def img_tag(url, alt="", width=1200, cls="", eager=False):
 def rich(s):
     if not s:
         return ""
+    s = brandfix(s)
     s = re.sub(r'\sclass="[^"]*"', "", s)
     s = re.sub(r'\sstyle="[^"]*"', "", s)
     s = re.sub(r'href="([^"]*)"', lambda m: f'href="{href(html.unescape(m.group(1)))}"', s)
@@ -169,6 +213,10 @@ def button(b, cls="btn"):
 def heads(p, lvl=None, pre="preheading", head="heading", sub="subheading"):
     lvl = lvl or (p.get("headingLevel") if p.get("headingLevel") in ("1", "2", "3") else "2")
     o = ""
+    p = {k: (brandfix(v) if isinstance(v, str) else v) for k, v in p.items()}
+    for k in (pre, head, sub):  # Podia's unfilled template words
+        if (p.get(k) or "").strip() in PLACEHOLDERS:
+            p[k] = ""
     if p.get(pre):
         o += f'<p class="pre">{e(p[pre].strip())}</p>'
     if p.get(head):
@@ -203,10 +251,13 @@ def buttons(p):
 def r_image(p, first=False):
     side = "left" if (p.get("mediaPlacement") or "").startswith("left") else "right"
     pic = img_tag(p.get("image"), p.get("imageAltText"), 1100, eager=first)
-    body = f'<div class="copy">{heads(p)}{rich(p.get("text"))}{buttons(p)}</div>'
+    body = f'<div class="copy">{heads(p, "1" if first else None)}{rich(p.get("text"))}{buttons(p)}</div>'
     if not pic:
-        return wrap(p, body, "narrow")
-    return wrap(p, f'<div class="split {side}"><div class="media">{pic}</div>{body}</div>', "hero" if first else "")
+        return wrap(p, body, "narrow lead" if first else "narrow")
+    if first:
+        return (f'<section class="sec lead"><div class="wrap"><div class="split {side}">'
+                f'<div class="media framed">{pic}</div>{body}</div></div></section>')
+    return wrap(p, f'<div class="split {side}"><div class="media">{pic}</div>{body}</div>')
 
 
 def r_text(p, first=False):
@@ -218,25 +269,56 @@ def r_cta(p, first=False):
     return wrap(p, f'<div class="copy center">{heads(p)}{buttons(p)}</div>', "narrow")
 
 
-def product_card(pr):
-    name = pr["names"].get("external") or pr["names"]["primary"]
+def product_slug(pr):
+    return pr["buttons"]["primary"]["url"].rstrip("/").split("/")[-1]
+
+
+def product_card(pr, badge=""):
+    name = fixname(pr["names"].get("external") or pr["names"]["primary"])
     price = " · ".join(pr.get("prices", {}).values())
+    if price in ("Free email delivery", "Free"):
+        price = "Free"
     url = href(pr["buttons"]["primary"]["url"])
-    pic = img_tag(pr["images"].get("external") or pr["images"].get("primary"), name, 600)
+    photo = PRODUCT_PHOTO.get(product_slug(pr))
+    if photo:
+        pic = img_tag(photo, name, 700)
+        price = price.replace("6 monthly payments of $300", "$300/mo for 6 months")
+    else:
+        pic = img_tag(pr["images"].get("external") or pr["images"].get("primary"), name, 600)
+    badge_html = f'<span class="badge">{e(badge)}</span>' if badge else ""
     desc = (pr["descriptions"].get("external") or pr["descriptions"].get("primary") or "").split("\n")[0]
     if len(desc) > 150:
         desc = desc[:147].rsplit(" ", 1)[0] + "…"
-    return (f'<a class="card product" href="{e(url)}"><div class="cover">{pic}</div>'
-            f'<div class="card-body"><p class="tag">{e(pr["metadata"].get("type", ""))}</p>'
+    tag = pr["metadata"].get("type", "")
+    tag = "1-on-1 coaching" if tag.lower().startswith("coaching") else tag
+    more = "Learn more" if photo else ("Get it free" if price == "Free" else "See the book")
+    return (f'<a class="card product{" has-photo" if photo else ""}{" featured" if badge else ""}" href="{e(url)}">'
+            f'<div class="cover{" photo-fill" if photo else ""}">{badge_html}{pic}</div>'
+            f'<div class="card-body"><p class="tag">{e(tag)}</p>'
             f'<h3>{e(name)}</h3><p class="desc">{e(desc)}</p>'
-            f'<p class="price">{e(price)}</p></div></a>')
+            f'<p class="price">{e(price)}<span class="more">{more} →</span></p></div></a>')
 
 
 def r_products(p, first=False):
-    prods = sorted(items(p["products"]), key=lambda x: -(x.get("priceCents") or 0))
-    cards = "".join(product_card(x) for x in prods if x.get("visible", True))
-    return (f'<section class="sec" id="books" style="{colors(p)}"><div class="wrap">'
-            f'{section_header(p)}<div class="grid g3">{cards}</div></div></section>')
+    prods = [x for x in items(p["products"]) if x.get("visible", True)]
+    coaching = [x for x in prods if product_slug(x) in PRODUCT_PHOTO]
+    free = [x for x in prods if not x.get("priceCents") and x not in coaching]
+    books = [x for x in prods if x not in coaching and x not in free]
+    order = {k: i for i, k in enumerate(BOOK_ORDER)}
+    books.sort(key=lambda x: order.get(product_slug(x), 99))
+    book_cards = "".join(product_card(x, "Best value" if product_slug(x) == "freedom-bundle" else "") for x in books)
+    free_cards = "".join(product_card(x) for x in free)
+    coach_cards = "".join(product_card(x) for x in coaching)
+    consult = (f'<p class="center consult">Not sure which is right for you? <a href="{e(BOOKING_URL)}" target="_blank" '
+               f'rel="noopener">Book a free consultation</a></p>') if BOOKING_URL else ""
+    return (f'<section class="sec" id="books"><div class="wrap">{section_header(p)}'
+            f'<div class="grid g3">{book_cards}</div></div></section>'
+            f'<section class="sec tint" id="free"><div class="wrap"><div class="sec-head"><p class="pre">Start here</p>'
+            f'<h2>Free Resources</h2><p class="sub">Not ready to buy? Start with one of these, sent straight to your inbox.</p></div>'
+            f'<div class="grid g3">{free_cards}</div></div></section>'
+            f'<section class="sec dark" id="work-with-trey"><div class="wrap"><div class="sec-head"><p class="pre">Go further, faster</p>'
+            f'<h2>Work With Trey 1-on-1</h2><p class="sub">Books give you the steps. Coaching walks them with you, week after week.</p></div>'
+            f'<div class="grid g2 coach">{coach_cards}</div>{consult}</div></section>')
 
 
 def r_bundle(p, first=False):
@@ -274,7 +356,8 @@ def r_testimonials(p, first=False):
     cards = ""
     for t in items(p["testimonials"]):
         per = t["person"]
-        av = img_tag(per.get("avatar"), per.get("name"), 160, "avatar")
+        av = img_tag(per.get("avatar"), per.get("name"), 160, "avatar") or \
+            f'<span class="avatar initial">{e((per.get("name") or "?")[:1])}</span>'
         label = f'<p class="tlabel">{e(t["website"]["label"])}</p>' if (t.get("website") or {}).get("label") else ""
         cards += (f'<figure class="card pad quote">{label}<blockquote>{rich(t["text"])}</blockquote>'
                   f'<figcaption>{av}<span>{e(per.get("name") or "")}</span></figcaption></figure>')
@@ -324,16 +407,19 @@ def buy_button(path, label):
 
 
 def r_banner(p, first=False, path=""):
-    name = p["names"].get("external") or p["names"]["primary"]
+    name = fixname(p["names"].get("external") or p["names"]["primary"])
     custom = p.get("heading") and p["heading"] != "Banner"
     price = " · ".join(p.get("prices", {}).values())
     text = rich(p["text"].get("external")) or plain(p["text"].get("primary"))
-    pic = (img_tag(p["images"].get("external"), name, 900, eager=True)
+    pic = (img_tag(PRODUCT_PHOTO.get(path), name, 900, eager=True)
+           or img_tag(p["images"].get("external"), name, 900, eager=True)
            or img_tag(p["images"].get("primary"), name, 900, eager=True))
     label = (p.get("buttons", {}).get("checkout") or {}).get("text") or "Buy now"
     top = heads(p, "1") if custom else f"<h1>{e(name)}</h1>"
     meta = p.get("metadata", {})
-    tag = " · ".join(x for x in (meta.get("type"), meta.get("includedItems")) if x)
+    kind = (meta.get("type") or "").lower()
+    tag = ("Ebook · Instant download" if kind == "download" else "1-on-1 coaching" if kind.startswith("coaching")
+           else " · ".join(x for x in (meta.get("type"), meta.get("includedItems")) if x))
     sub = f'<p class="btn-sub">{e(p["buttonSubtext"])}</p>' if p.get("buttonSubtext") else ""
     body = (f'<div class="copy"><p class="pre">{e(tag)}</p>{top}{text}'
             f'<p class="price big">{e(price)}</p>{buy_button(path, label)}{sub}</div>')
@@ -350,7 +436,7 @@ def r_toc(p, first=False):
 
 
 def r_membership(p, first=False):
-    return wrap(p, '<div class="copy center"><p class="pre">Community</p><h1>The Restoration Movement</h1>'
+    return wrap(p, '<div class="copy center"><p class="pre">Community</p><h1>The Tarry With Me Community</h1>'
                    '<p>A space where we walk through the process together, until healing comes, growth comes, '
                    'recovery comes, and advancement follows.</p>'
                    '<div class="btns"><a class="btn big" href="https://www.tarrywithme.com/p/join">Join the community</a></div></div>',
@@ -392,6 +478,7 @@ def shell(title, desc, body, path):
     nav = "".join(f'<a href="{e(href("/" + t) if not t.startswith("#") else href("/") + t)}">{e(n)}</a>' for n, t in NAV)
     canon = "https://www.tarrywithme.com/" + ("" if path == "index" else path)
     year_line = "© Trey Walters. All rights reserved."
+    social = "".join(f'<a href="{e(u)}" target="_blank" rel="noopener">{e(n)}</a>' for n, u in SOCIALS)
     page = f"""<!doctype html>
 <html lang="en">
 <head>
@@ -403,15 +490,19 @@ def shell(title, desc, body, path):
 <meta property="og:title" content="{e(title)}">
 <meta property="og:description" content="{e(desc or '')}">
 <meta property="og:type" content="website">
+<meta property="og:site_name" content="{e(SITE_NAME)}">
+<meta property="og:image" content="https://www.tarrywithme.com/assets/og.jpg">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="{'../' * depth}assets/icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Chivo:wght@700;800&family=Livvic:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Chivo:wght@700;800;900&family=Cinzel:wght@600;700&family=Livvic:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="{'../' * depth}style.css">
 </head>
 <body>
 <header class="top">
   <div class="wrap bar">
-    <a class="brand" href="{e(href('/'))}">{e(SITE_NAME)}</a>
+    <a class="brand" href="{e(href('/'))}"><img src="{'../' * depth}assets/icon.png" alt="" width="44" height="44"><span>{e(SITE_NAME)}</span></a>
     <input type="checkbox" id="menu" class="menu-toggle" aria-label="Open menu">
     <label for="menu" class="menu-btn" aria-hidden="true"><span></span><span></span><span></span></label>
     <nav>{nav}<a class="btn small" href="{e(href('/services'))}">Work With Trey</a></nav>
@@ -422,7 +513,9 @@ def shell(title, desc, body, path):
 </main>
 <footer class="foot">
   <div class="wrap foot-grid">
-    <div><p class="brand">{e(SITE_NAME)}</p><p><strong>{year_line}</strong><br>Author • Mentor • Speaker helping individuals rebuild, heal, and thrive after life’s toughest seasons.</p></div>
+    <div><img class="foot-logo" src="{'../' * depth}assets/logo-gold.png" alt="{e(SITE_NAME)}: {e(TAGLINE)}" width="240" height="116">
+      <p>Faith-based books, mentorship and coaching from bestselling author Trey Walters.</p>
+      <p class="foot-social">{social}</p><p class="small">{year_line}</p></div>
     <nav><a href="{e(href('/'))}">Home</a>{nav}</nav>
     <div><p class="foot-h">Join my email list</p>{signup_form('Subscribe', 'footer')}</div>
   </div>
@@ -451,6 +544,7 @@ if os.path.exists(OUT):
     shutil.rmtree(OUT)
 os.makedirs(OUT)
 shutil.copy(os.path.join(ROOT, "style.css"), os.path.join(OUT, "style.css"))
+shutil.copytree(os.path.join(ROOT, "assets"), os.path.join(OUT, "assets"))
 
 for key, pg in pages.items():
     if key == "blog":
@@ -466,7 +560,15 @@ for key, pg in pages.items():
         elif n in RENDER:
             body += RENDER[n](c["p"], first)
             first = False
-    title = pg["title"] or SITE_NAME
+    title = brandfix(fixname(pg["title"] or SITE_NAME))
+    if path != "index" and SITE_NAME not in title and "Trey Walters" not in title:
+        title += " | " + SITE_NAME
+    if path == "index":
+        body = body.replace("Break Free From Lust.", '<span class="hl">Break Free From Lust.</span>', 1)
+        strip = "".join(f"<li>{e(x)}</li>" for x in FEATURED_ON)
+        cut = body.find("</section>") + len("</section>")
+        body = (body[:cut] + f'<section class="featured-strip"><div class="wrap"><p>As featured on</p><ul>{strip}</ul></div></section>'
+                + body[cut:])
     write(path, shell(title, pg.get("meta"), body, path))
 
 # blog

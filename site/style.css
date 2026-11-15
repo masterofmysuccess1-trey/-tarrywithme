@@ -50,7 +50,9 @@ li p { margin: 0 0 0.4em; }
 /* header */
 .top { background: var(--navy); color: #fff; position: sticky; top: env(safe-area-inset-top, 0px); z-index: 10; }
 .bar { display: flex; align-items: center; justify-content: space-between; gap: 24px; min-height: 68px; }
-.brand { font-family: Chivo, sans-serif; font-weight: 800; font-size: 1.15rem; text-decoration: none; letter-spacing: -0.01em; }
+.brand { display: flex; align-items: center; gap: 10px; font-family: Cinzel, Georgia, serif; font-weight: 700; font-size: 1.3rem;
+  color: var(--gold); text-decoration: none; letter-spacing: 0.04em; white-space: nowrap; }
+.brand img { width: 44px; height: 44px; }
 .top nav { display: flex; align-items: center; gap: 26px; }
 .top nav a { text-decoration: none; font-size: 1rem; }
 .top nav a:not(.btn):hover { color: var(--gold); }
@@ -197,4 +199,97 @@ a.card:hover { transform: translateY(-3px); box-shadow: 0 12px 28px rgba(31, 57,
   .g3, .g4 { grid-template-columns: 1fr; }
   .signup { flex-direction: column; }
   .photo img { aspect-ratio: 4 / 3; }
+}
+
+/* ---------- brand refresh (Nov 2026) ---------- */
+h1, h2 { font-weight: 800; }
+
+/* opening section: big, bold, navy and gold */
+.sec.lead {
+  background: radial-gradient(120% 90% at 85% 10%, #2a4aa8 0%, var(--navy) 45%, var(--navy-deep) 100%);
+  color: #fff; padding: clamp(48px, 7vw, 96px) 0; overflow: hidden;
+}
+.sec.lead h1 { color: #fff; font-size: clamp(2.5rem, 6vw, 4.4rem); line-height: 1.04; letter-spacing: -0.03em; }
+.sec.lead .hl { color: var(--gold); }
+.sec.lead .pre { color: var(--gold); }
+.sec.lead strong { color: #fff; }
+.sec.lead .copy p { color: rgba(255, 255, 255, 0.88); }
+.sec.lead .btn { background: var(--gold); color: var(--navy-deep); font-weight: 700; font-size: 1.1rem; padding: 0.95em 2em; }
+.media.framed { position: relative; }
+.media.framed::before {
+  content: ""; position: absolute; inset: 22px -22px -22px 22px; border: 3px solid var(--gold); border-radius: 10px; z-index: 0;
+}
+.media.framed img { position: relative; z-index: 1; border-radius: 10px; box-shadow: 0 30px 60px rgba(0, 0, 0, 0.35); max-height: 620px; object-fit: cover; }
+
+/* featured-on strip */
+.featured-strip { background: var(--navy-deep); color: #fff; padding: 22px 0; border-top: 1px solid rgba(201, 162, 74, 0.35); }
+.featured-strip .wrap { display: flex; align-items: center; gap: 28px; flex-wrap: wrap; justify-content: center; }
+.featured-strip p { margin: 0; font-size: 0.8rem; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase; color: var(--gold); }
+.featured-strip ul { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 10px 28px; justify-content: center; }
+.featured-strip li { font-family: Chivo, sans-serif; font-weight: 700; opacity: 0.9; }
+
+/* tinted and dark sections */
+.sec.tint { background: var(--mist); }
+.sec.dark { background: var(--navy-deep); color: #fff; }
+.sec.dark h2 { color: #fff; }
+.sec.dark .sub { color: rgba(255, 255, 255, 0.85); }
+.consult { margin: 2em 0 0; font-size: 1.05rem; }
+.consult a { color: var(--gold); font-weight: 700; }
+
+/* product cards */
+.card.product h3 { font-size: 1.1rem; }
+.cover { position: relative; }
+.cover.photo-fill { padding: 0; aspect-ratio: 4 / 3; }
+.cover.photo-fill img { width: 100%; height: 100%; max-height: none; object-fit: cover; object-position: 50% 25%; box-shadow: none; }
+.badge {
+  position: absolute; top: 14px; left: 14px; z-index: 2; background: #d62b2b; color: #fff;
+  font: 700 0.75rem/1 Livvic, sans-serif; letter-spacing: 0.1em; text-transform: uppercase; padding: 8px 12px; border-radius: 999px;
+}
+.card.featured { border: 2px solid var(--gold); box-shadow: 0 14px 34px rgba(201, 162, 74, 0.25); }
+.price { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; }
+.price .more { font-family: Livvic, sans-serif; font-weight: 600; font-size: 0.9rem; color: var(--gold); white-space: nowrap; }
+.coach { max-width: 900px; margin: 0 auto; }
+.sec.dark .card { border: 0; }
+
+/* testimonials without a photo */
+.avatar.initial { display: inline-flex; align-items: center; justify-content: center; background: var(--gold); color: var(--navy-deep);
+  font: 800 1.2rem Chivo, sans-serif; }
+
+/* footer */
+.foot-logo { width: 220px; height: auto; margin-bottom: 1em; }
+.foot-social { display: flex; gap: 18px; }
+.foot-social a { font-weight: 600; text-decoration: none; color: var(--gold); }
+.foot .small { font-size: 0.85rem; opacity: 0.7; }
+
+@media (max-width: 860px) {
+  .brand { font-size: 1.1rem; }
+  .brand img { width: 36px; height: 36px; }
+  .media.framed::before { inset: 14px -10px -14px 10px; }
+  .media.framed img { max-height: 460px; }
+  .coach { grid-template-columns: 1fr; }
+}
+
+/* the bundle leads the books as one wide card */
+@media (min-width: 861px) {
+  #books .card.featured { grid-column: 1 / -1; flex-direction: row; }
+  #books .card.featured .cover { flex: 0 0 42%; aspect-ratio: auto; padding: 28px; }
+  #books .card.featured .card-body { padding: 36px 40px; justify-content: center; }
+  #books .card.featured h3 { font-size: 1.7rem; }
+  #books .card.featured .desc { font-size: 1.05rem; }
+  #books .card.featured .price { margin-top: 1em; font-size: 1.5rem; }
+}
+
+/* phones: headline before the photo, books two across */
+@media (max-width: 860px) {
+  .sec.lead .split .media { order: 2 !important; }
+}
+@media (max-width: 560px) {
+  #books .grid, #free .grid { grid-template-columns: 1fr 1fr; gap: 12px; }
+  #books .card.featured { grid-column: 1 / -1; }
+  #books .card-body, #free .card-body { padding: 14px; }
+  #books .card h3, #free .card h3 { font-size: 0.95rem; }
+  #books .card .desc, #free .card .desc { display: none; }
+  #books .card.featured .desc { display: block; }
+  #books .cover, #free .cover { padding: 10px; }
+  .price { flex-direction: column; gap: 2px; }
 }

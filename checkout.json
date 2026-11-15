@@ -1,6 +1,8 @@
 {
   "_readme": "One entry per product page. kind 'pay' = a buy button that goes to 'url' (a Stripe Payment Link once set up; empty means it still points at the Podia checkout). kind 'email' = a free download delivered by email sign-up.",
   "_email_form_action": "/api/subscribe",
+  "_booking_url_readme": "Paste your free-consultation booking link here (for example your Calendly link) to show a 'Book a free consultation' link under the coaching cards.",
+  "_booking_url": "",
   "_sender_groups_readme": "Which Sender group each sign-up box adds people to. 'newsletter' is added for every sign-up; the others are the free-download pages.",
   "_sender_groups": {
     "newsletter": "dJ2A0P",
